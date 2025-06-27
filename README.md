@@ -1,69 +1,49 @@
-# React + TypeScript + Vite
+# Snake Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![Deploy](https://github.com/SunR1sen/snake-web/actions/workflows/deploy.yml/badge.svg)](https://github.com/SunR1sen/snake-web/actions/workflows/deploy.yml)
 
-Currently, two official plugins are available:
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/placeholder/snake-demo.png" alt="Snake Game Demo" width="350"/>
+</p>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🕹️ Play Online
 
-## Expanding the ESLint configuration
+👉 [Open Snake Game](https://SunR1sen.github.io/snake-web/)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Features
+- Classic Snake game (Nokia style)
+- Responsive & mobile-friendly
+- Keyboard and swipe controls
+- Pause/Resume support
+- 3 difficulty levels
+- Score counter
+- Modern React + Vite + TypeScript + SCSS Modules
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## Getting Started
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Build & Deploy
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build
+npm run deploy
 ```
+
+> 🚀 Auto-deploys to GitHub Pages on every push to `master` via GitHub Actions.
+
+---
+
+## Controls
+- **Desktop:** Arrow keys to move, Space to pause/resume
+- **Mobile:** Swipe anywhere to control the snake
+
+---
+
+## License
+MIT
