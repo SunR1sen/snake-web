@@ -175,15 +175,15 @@ export const SnakeGame: React.FC = () => {
   };
 
   const getButtonText = () => {
-    if (!isRunning) return 'Старт';
-    if (isPaused) return 'Продолжить';
-    return 'Пауза';
+    if (!isRunning) return 'Start';
+    if (isPaused) return 'Resume';
+    return 'Pause';
   };
 
   return (
     <div className={cn(styles.container, styles.relativeContainer)}>
-      <h2 className={styles.title}>Змейка</h2>
-      <div className={styles.score}>Счёт: {score}</div>
+      <h2 className={styles.title}>Snake</h2>
+      <div className={styles.score}>Score: {score}</div>
       <div className={styles.gameField}>
         {Array.from({ length: FIELD_SIZE * FIELD_SIZE }).map((_, i) => {
           const x = i % FIELD_SIZE;
@@ -204,7 +204,7 @@ export const SnakeGame: React.FC = () => {
           );
         })}
         {isRunning && isPaused && (
-          <div className={styles.pauseOverlay}>Игра на паузе</div>
+          <div className={styles.pauseOverlay}>Paused</div>
         )}
       </div>
       <div className={styles.controls}>
@@ -222,13 +222,13 @@ export const SnakeGame: React.FC = () => {
           onChange={handleDifficulty} 
           disabled={isRunning}
         >
-          <option value="easy">Легко</option>
-          <option value="medium">Средне</option>
-          <option value="hard">Сложно</option>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
         </select>
       </div>
       {!isRunning && score > 0 && (
-        <div className={styles.gameOver}>Игра окончена! Ваш счёт: {score}</div>
+        <div className={styles.gameOver}>Game over! Your score: {score}</div>
       )}
     </div>
   );
