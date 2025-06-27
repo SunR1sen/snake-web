@@ -12,6 +12,7 @@
   "dependencies": {
     "@reatom/core": "^2.0.22",
     "@reatom/react": "^2.0.19",
+    "classnames": "^2.5.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "sass": "^1.89.2"

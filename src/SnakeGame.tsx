@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import cn from 'classnames';
 import styles from './SnakeGame.module.scss';
 
 export type Point = { x: number; y: number };
@@ -31,30 +32,97 @@ export const SnakeGame: React.FC = () => {
   const [direction, setDirection] = useState<Direction>('right');
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [isRunning, setIsRunning] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [score, setScore] = useState(0);
   const moveRef = useRef(direction);
   const runningRef = useRef(isRunning);
+  const pausedRef = useRef(isPaused);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
-  // Сохраняем последнее направление и статус игры
   useEffect(() => { moveRef.current = direction; }, [direction]);
   useEffect(() => { runningRef.current = isRunning; }, [isRunning]);
+  useEffect(() => { pausedRef.current = isPaused; }, [isPaused]);
 
-  // Управление с клавиатуры
+  const changeDirection = (newDirection: Direction) => {
+    if (!runningRef.current || pausedRef.current) return;
+    if (newDirection === 'up' && moveRef.current !== 'down') setDirection('up');
+    if (newDirection === 'down' && moveRef.current !== 'up') setDirection('down');
+    if (newDirection === 'left' && moveRef.current !== 'right') setDirection('left');
+    if (newDirection === 'right' && moveRef.current !== 'left') setDirection('right');
+  };
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (!runningRef.current) return;
-      if (e.key === 'ArrowUp' && moveRef.current !== 'down') setDirection('up');
-      if (e.key === 'ArrowDown' && moveRef.current !== 'up') setDirection('down');
-      if (e.key === 'ArrowLeft' && moveRef.current !== 'right') setDirection('left');
-      if (e.key === 'ArrowRight' && moveRef.current !== 'left') setDirection('right');
+      if (e.key === 'ArrowUp') changeDirection('up');
+      if (e.key === 'ArrowDown') changeDirection('down');
+      if (e.key === 'ArrowLeft') changeDirection('left');
+      if (e.key === 'ArrowRight') changeDirection('right');
+      if (e.key === ' ') {
+        e.preventDefault();
+        if (isRunning) {
+          setIsPaused(!isPaused);
+        }
+      }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
+  }, [isRunning, isPaused]);
+
+  useEffect(() => {
+    const handleTouchStart = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('button') || target.closest('select') || target.closest('option')) {
+        return;
+      }
+      e.preventDefault();
+      const touch = e.touches[0];
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('button') || target.closest('select') || target.closest('option')) {
+        return;
+      }
+      e.preventDefault();
+      if (!touchStartRef.current) return;
+      const touch = e.changedTouches[0];
+      const startX = touchStartRef.current.x;
+      const startY = touchStartRef.current.y;
+      const endX = touch.clientX;
+      const endY = touch.clientY;
+      const deltaX = endX - startX;
+      const deltaY = endY - startY;
+      const minSwipeDistance = 30;
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        if (Math.abs(deltaX) > minSwipeDistance) {
+          if (deltaX > 0) {
+            changeDirection('right');
+          } else {
+            changeDirection('left');
+          }
+        }
+      } else {
+        if (Math.abs(deltaY) > minSwipeDistance) {
+          if (deltaY > 0) {
+            changeDirection('down');
+          } else {
+            changeDirection('up');
+          }
+        }
+      }
+      touchStartRef.current = null;
+    };
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: false });
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
   }, []);
 
-  // Основной игровой цикл
   useEffect(() => {
-    if (!isRunning) return;
+    if (!isRunning || isPaused) return;
     const interval = setInterval(() => {
       setSnake(prevSnake => {
         const head = prevSnake[0];
@@ -63,51 +131,57 @@ export const SnakeGame: React.FC = () => {
         if (moveRef.current === 'down') newHead.y = (head.y + 1) % FIELD_SIZE;
         if (moveRef.current === 'left') newHead.x = (head.x - 1 + FIELD_SIZE) % FIELD_SIZE;
         if (moveRef.current === 'right') newHead.x = (head.x + 1) % FIELD_SIZE;
-        
-        // Проверка на столкновение с собой
         if (prevSnake.some(p => p.x === newHead.x && p.y === newHead.y)) {
           setIsRunning(false);
+          setIsPaused(false);
           setScore(0);
           return prevSnake;
         }
-        
         let grow = false;
         if (newHead.x === food.x && newHead.y === food.y) {
           grow = true;
           setFood(getRandomFreeCell(FIELD_SIZE, [newHead, ...prevSnake]));
           setScore(s => s + 1);
         }
-        
         const newSnake = [newHead, ...prevSnake];
         if (!grow) newSnake.pop();
         return newSnake;
       });
     }, DIFFICULTY_SPEED[difficulty]);
     return () => clearInterval(interval);
-  }, [isRunning, difficulty, food]);
+  }, [isRunning, isPaused, difficulty, food]);
 
-  // Сброс игры
-  const startGame = () => {
-    setSnake([
-      { x: Math.floor(FIELD_SIZE / 2), y: Math.floor(FIELD_SIZE / 2) },
-      { x: Math.floor(FIELD_SIZE / 2) - 1, y: Math.floor(FIELD_SIZE / 2) },
-    ]);
-    setDirection('right');
-    setFood(getRandomFreeCell(FIELD_SIZE, [
-      { x: Math.floor(FIELD_SIZE / 2), y: Math.floor(FIELD_SIZE / 2) },
-      { x: Math.floor(FIELD_SIZE / 2) - 1, y: Math.floor(FIELD_SIZE / 2) },
-    ]));
-    setIsRunning(true);
-    setScore(0);
+  const handleGameControl = () => {
+    if (!isRunning) {
+      setSnake([
+        { x: Math.floor(FIELD_SIZE / 2), y: Math.floor(FIELD_SIZE / 2) },
+        { x: Math.floor(FIELD_SIZE / 2) - 1, y: Math.floor(FIELD_SIZE / 2) },
+      ]);
+      setDirection('right');
+      setFood(getRandomFreeCell(FIELD_SIZE, [
+        { x: Math.floor(FIELD_SIZE / 2), y: Math.floor(FIELD_SIZE / 2) },
+        { x: Math.floor(FIELD_SIZE / 2) - 1, y: Math.floor(FIELD_SIZE / 2) },
+      ]));
+      setIsRunning(true);
+      setIsPaused(false);
+      setScore(0);
+    } else {
+      setIsPaused(!isPaused);
+    }
   };
 
-  // Смена сложности
   const handleDifficulty = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setDifficulty(e.target.value as Difficulty);
   };
 
+  const getButtonText = () => {
+    if (!isRunning) return 'Старт';
+    if (isPaused) return 'Продолжить';
+    return 'Пауза';
+  };
+
   return (
-    <div className={styles.container}>
+    <div className={cn(styles.container, styles.relativeContainer)}>
       <h2 className={styles.title}>Змейка</h2>
       <div className={styles.score}>Счёт: {score}</div>
       <div className={styles.gameField}>
@@ -117,12 +191,11 @@ export const SnakeGame: React.FC = () => {
           const isHead = snake[0].x === x && snake[0].y === y;
           const isBody = snake.slice(1).some(p => p.x === x && p.y === y);
           const isFood = food.x === x && food.y === y;
-          
-          let cellClass = styles.cell;
-          if (isHead) cellClass += ` ${styles.head}`;
-          else if (isBody) cellClass += ` ${styles.body}`;
-          else if (isFood) cellClass += ` ${styles.food}`;
-          
+          let cellClass = cn(styles.cell, {
+            [styles.head]: isHead,
+            [styles.body]: !isHead && isBody,
+            [styles.food]: !isHead && !isBody && isFood,
+          });
           return (
             <div
               key={i}
@@ -130,15 +203,19 @@ export const SnakeGame: React.FC = () => {
             />
           );
         })}
+        {isRunning && isPaused && (
+          <div className={styles.pauseOverlay}>Игра на паузе</div>
+        )}
       </div>
       <div className={styles.controls}>
         <button 
           className={styles.startButton} 
-          onClick={startGame} 
-          disabled={isRunning}
+          onClick={handleGameControl}
         >
-          Старт
+          {getButtonText()}
         </button>
+      </div>
+      <div className={styles.difficultyRow}>
         <select 
           className={styles.difficultySelect} 
           value={difficulty} 
